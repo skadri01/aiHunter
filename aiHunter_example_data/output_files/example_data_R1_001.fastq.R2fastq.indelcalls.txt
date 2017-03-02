@@ -1,0 +1,2 @@
+Amplicon	Reads_w_indel>5bp	#readpairspassingfilter	%indel
+FLT3_14	1674	3534	0.473684210526
