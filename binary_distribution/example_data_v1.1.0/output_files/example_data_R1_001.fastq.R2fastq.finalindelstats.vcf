@@ -1,0 +1,17 @@
+##fileformat=VCFv4.1
+##fileDate=2016-03-24 23:40:50
+##source=/group/gmp-lab/skadri/softwares/AIH_AID/test_data/example_data_R1_001.fastq.R2fastq.finalindelstats
+##reference=file:///
+##contig=
+##phasing=partial
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+##INFO=<ID=DP30,Number=1,Type=Integer,Description="Total Depth higher than 30x">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+##FILTER=<ID=q10,Description="Quality below 10">
+##FILTER=<ID=s50,Description="Less than 50% of samples have data">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
+##FORMAT=<ID=HQ,Number=2,Type=Integer,Description="Haplotype Quality">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	my_sample
+chr13	28608257	.	T	TCATATTCATATTCTCTGAAATCATAAA	.	.	DP=3524;DP30=3524;AF=0.473;REF=T;ALT=TCATATTCATATTCTCTGAAATCATAAA;	GT:DP	:
