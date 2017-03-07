@@ -55,7 +55,109 @@ aiHunter requires the following input files in order to run:
 |``--amp``  |Tab-delimited amplicon info file. See below.   |
 |``--inserts``  |Fasta file with insert sequences. See below.   |
   
-     
+### Amplicon Info File
+
+Please make sure that the coordinates listed in this file are accurate. These will be used by the Amplicon Indel Diagnoser program to identify the genomic coordinates of the indel.
+Note: Please make sure that the file has a header line. Tab delimited file with following columns:
    
-       
+|Column name in header|Description|
+|-----|-----|
+|``AmpliconName``  |Name of the amplicon. Depends on assay.   |
+|``Primer1Sequence``  |Primer1 sequence. Should be + strand genomic sequence. |
+|``Primer2Sequence``  |Primer2 sequence. Should be "-" strand genomic sequence, that is, reverse complement of the sense sequence. |
+|``AmpliconLength``  |Length of the amplicon. Can be calculated as (AmpliconStop - AmpliconStart + 1) or (Primer2End - Primer1Start + 1) |
+|``Chr``  |Reference Chromosome   |
+|``GenomicAmpliconStart``  |Genomic Amplicon Start, which is the same as Primer1 Start  |
+|``GenomicAmpliconEnd``  |Genomic Amplicon End, which is the same as Primer2 End  |
+
+### Inserts Fasta file
+
+Amplicon Indel Diagnoser part of aiHunter requires a fasta file with the insert sequences of the assay in order to determine the exact sequence of the indel, wherever possible. This file can be generated using by making a BED file of the inserts and then using UCSC genome browser in order to download the Fasta file.   
+
+**Note: Please make sure your inserts bed file has Chr Primer1End and (Primer2Start - 1) in order to get the correct sequence from UCSC**   
+
+**Note: Please make sure that the amplicon names in the inserts fasta file match the amplicon names in the amplicon info file**   
+
+## Optional parameters
+
+|     |     |
+|-----|-----|
+|``--help or -h``  |Outputs a quick help manual for running aiHunter.  |
+|``--version or -v``  |Provides version information.  |
+|``--info``  |Quick information about the Amplicon Info file  |
+|``--out OUTDIR``  |Output directory for the results. Default = Current working directory.  |
+|``--cushion CUSHION``  |Cushion Value (default: 5). Please see Section 3 or publication for more details. |
+|``--maf SIGNIFICANCE``  |Mutant allele frequency threshold (default: 0.05)  |
+
+
+## Outputs from AIH and AID
+
+### Output files and formats   
+
+aiHunter outputs the following four files for each pair of fastq files. The main output file is ``<read1 filename>.R2fastq.finalindelstats.vcf`` :
+
+* ``<read1 filename>.R2fastq.indelcalls.txt``
+
+This is the output of the AIH module of the software. It is a table for one row for each amplicon. The four columns and their descriptions are given below.   
+
+|     |     |
+|-----|-----|
+|``Amplicon``  |Name of amplicon as provided in the input info file |
+|``Reads_w_indel>5bp``  |Number of Reads with potential indel of size greater than the cushion size. The 5bp represents the default cushion size, and even if a different cushion is provided, this column header remains the same.  |
+|``#readpairspassingfilter``  |Number of reads which match the primer pair for the specific amplicon with minimum identity of 90%  |
+|``%indel``  |Column\#2 / Column\#3  |
+
+* ``<read1 filename>.R2fastq.indelcalls.significant.txt``   
+
+A list of amplicon names that pass the MAF threshold (See ``--maf SIGNIFICANCE``). Each of these are investigated by the AID module of the software.   
+
+* ``<read1 filename>.R2fastq.finalindelstats``   
+
+Output of the AID module of the software. The file has no header. It is a 8-column tab-delimited text file with the following columns.   
+``chrom position depth depth ref_allele ref_freq indel indel_freq``
+
+* ``<read1 filename>.R2fastq.finalindelstats.vcf``   
+
+Output of the AID module of the software. A VCF formatted output of the annotated (if possible) indels.
+
+
+### Indel Annotation Failure
+
+In cases where the insertions are so large that there is little or no longer overlap between the read mates, AID might fail in determining the exact indel sequence and output:   
+
+``Failed indel identification - manual review required for <amplicon name>``   
+
+In such cases, we usually use a combination of the detailed logs from AID and inspection of the misaligned read alignments in IGV to manually determine the indel sequence. This is not a frequent occurrence and only affects insertions.
+
+### Bad quality Problems
+
+Please note a bad sequencing run with deteriorating base qualities in a large portion of the read may affect the sensitivity of detection by this method, depending on the amplicon and read lengths.
+
+
+## FAQs
+
+#### Q. The finalindelstats file returns ``Failed indel identification - manual review required for <amplicon name>``
+
+**A.** This can happen when the insertion is so large that there is little or no overlap between the read mates. In this case you might want to do a manual review. In such cases, we usually use a combination of the detailed logs from AID and inspection of the misaligned read alignments in IGV to manually determine the indel sequence.   
+This might also be due to a bad sequencing run with deteriorating base qualities in a large portion of the read may affect the sensitivity of detection by this method, depending on the amplicon and read lengths.
+
+
+#### Q. The ``indelcalls.txt`` shows 0 counts for all amplicons.   
+
+**A.** There might be a problem with the input amplicon info file. Please recheck the format of the file, making sure that the Primer 1 sequence is in the genomic sense "+" direction and Primer 2 sequence is in the anti-sense "-" direction, that is, the reverse complement of the genomic sequence.   
+*Hint: You can use UCSC Insilico PCR tool to check the orientations of the primer sequences*
+
+
+#### Q. The log file returns an error of "No sequence found for \<amplicon name\> and the finalindelstats file is empty even though the ``indelcalls.txt`` has high MAF for the amplicon.   
+
+**A.** Please make sure the insert sequences for each amplicon is present in the Fasta file, and that the names of the amplicons are the same between the fasta file and the amplicon info file.   
+
    
+
+#### Q. I am getting various string-related errors when I try to run the program.   
+
+**A.** Please make sure:   
+1. The inserts.fa file has the Inserts - sequence of the amplicon between the primers and does not include the primer sequences.
+2. Sequences for each amplicon are present in the Fasta file, and that the names of the amplicons are the same between the fasta file and the amplicon info file.
+3. The Fastq files are not zipped. The current version of aiHunter only works with unzipped fastq files.
+4. All reads are of the same length, that is, the adapters are not trimmed off, either by the software on the instrument or other data pre-processing.
